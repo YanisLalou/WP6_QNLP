@@ -71,11 +71,17 @@ def main():
         SentencesList = createsentencelist(Dftrain, MyDict)
         par, ix = MyDict.getindexmodelparams()
         myopt = optimizer.ClassicalOptimizer()
-
+        
+        """
         result = myopt.optimizedataset(
             SentencesList, par, MyDict,
             options={'maxiter': int(args.iterations), 'disp' : True},
             method=args.optimiser)
+        """
+        result = myopt.optimizedataset(
+            SentencesList, par, MyDict,
+            options={'maxiter': int(args.iterations), 'disp' : True})
+        
         
         MyDict.updateparams(result.x)
         SentencesTest = createsentencelist(Dftest, MyDict)
