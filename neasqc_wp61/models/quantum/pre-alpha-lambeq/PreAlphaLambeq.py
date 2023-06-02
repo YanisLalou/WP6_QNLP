@@ -4,7 +4,7 @@ import pytket.extensions.qiskit as pyt
 import numpy as np
 import discopy
 import torch
-
+torch.set_num_threads(40)
 
 class PreAlphaLambeq:
     """
