@@ -2,7 +2,9 @@ import circuit
 import scipy.optimize
 import math
 import numpy as np
-
+import torch
+from torch.optim import LBFGS
+torch.set_num_threads(40)
 
 class ClassicalOptimizer:
 
@@ -115,11 +117,31 @@ class ClassicalOptimizer:
         #    print('iteration {}'.format(self.iteration), '\n Cost: {}'.format((cost / len(SentencesList))))
         return cost/len(SentencesList)
 
-
+    """
     def optimizedataset(self, sentencelist, params0, mydict, options={'maxiter':3}, method="COBYLA"):
         params0 = np.array(params0)
         result = scipy.optimize.minimize(self.datasetcost, params0,
                                                     args=(sentencelist,mydict),
                                                     options=options,
                                                     method=method)
+        return result
+    """
+
+    def optimizedataset(self, sentencelist, params0, mydict, options={'max_iter': 3}):
+        params0 = torch.tensor(params0, requires_grad=True)
+        optimizer = LBFGS([params0], **options)
+
+        def closure():
+            optimizer.zero_grad()
+            cost = self.datasetcost(params0, sentencelist, mydict)
+            cost.backward()
+            return cost
+
+        for _ in range(options['max_iter']):
+            optimizer.step(closure)
+        
+        result = { 'x': params0.detach().numpy(), 'success': optimizer._optimizer.converged, 'message': 'Optimization terminated successfully.' if optimizer._optimizer.converged else 'Maximum number of iterations reached.'
+    }
+
+        #result = params0.detach().numpy()
         return result
