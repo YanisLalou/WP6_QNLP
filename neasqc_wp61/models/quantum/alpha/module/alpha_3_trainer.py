@@ -168,20 +168,24 @@ class Alpha_3_trainer():
 
     def predict(self):
         prediction_list = torch.tensor([]).to(self.device)
+        ground_truth_list = torch.tensor([])
         
         self.model.eval()
 
         with torch.no_grad():
             for inputs, labels in self.validation_dataloader:
                 inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+                #labels = labels.to(self.device)
 
                 outputs = self.model(inputs)
                 _, preds = torch.max(outputs, 1)
 
-                prediction_list = torch.cat((prediction_list, torch.round(torch.flatten(preds))))
+                _, labels = torch.max(labels, 1)
 
-        return prediction_list.detach().cpu().numpy()
+                prediction_list = torch.cat((prediction_list, torch.round(torch.flatten(preds))))
+                ground_truth_list = torch.cat((ground_truth_list, labels))
+
+        return prediction_list.detach().cpu().numpy(), ground_truth_list.numpy()
 
 
     def compute_test_logs(self, best_model):

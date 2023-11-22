@@ -13,6 +13,7 @@ import torch
 import numpy as np
 from statistics import mean
 from save_json_output import JsonOutputer
+from sklearn.metrics import precision_recall_fscore_support
 
 def main():
 
@@ -187,7 +188,14 @@ def main():
                 prediction_list.append(1)
 
         
-        test_acc = acc_np(model(circuits_test), labels_test)
+        test_pred = model(circuits_test)
+        test_acc = acc_np(test_pred, labels_test)
+
+        test_precision, test_recall, test_f1, _ = precision_recall_fscore_support(labels_test, test_pred)
+        # Since ndarrays are not json serializable, we need to convert them to lists
+        test_precision = test_precision.tolist() 
+        test_recall = test_recall.tolist()
+        test_f1 = test_f1.tolist()
 
         t2 = time.time()
         time_taken = t2 - t1
@@ -203,7 +211,7 @@ def main():
             args, prediction_list, time_taken,
             best_val_acc = best_val_accuracy, best_run = best_val_run,
             iteration_best_val_accuracy = iteration_best_val_accuracy,
-            seed_list = seed_list, train_loss = train_loss,
+            seed_list = seed_list, train_loss = train_loss, test_precision = test_precision, test_recall = test_recall, test_f1 = test_f1,
             train_acc = train_acc, val_loss = val_loss,
             val_acc = val_acc, test_acc = test_acc,
             weights = weights, vectors_train = vectors_train,

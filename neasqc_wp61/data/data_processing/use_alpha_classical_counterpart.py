@@ -4,15 +4,16 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_path + "/../../models/quantum/alpha/module/")
 import argparse
 
+import json
 import numpy as np
 
 import random, os
 import numpy as np
 import torch
 import time
-from sklearn.metrics import precision_recall_fscore_support
+import git
 
-from alpha_3_trainer import Alpha_3_trainer
+from alpha_classical_counterparts_trainer import Alpha_classical_counterparts_trainer
 from save_json_output import JsonOutputer
 
 
@@ -29,8 +30,6 @@ parser.add_argument("-val", "--val", help = "Directory of the validation dataset
 parser.add_argument("-te", "--test", help = "Directory of the test dataset", type = str, default = '../toy_dataset/toy_dataset_bert_sentence_embedding_test.csv')
 parser.add_argument("-o", "--output", help = "Output directory with the predictions", type = str, default = "../../benchmarking/results/raw/")
 
-parser.add_argument("-nq", "--n_qubits", help = "Number of qubits in our circuit", type = int, default = 3)
-parser.add_argument("-qd", "--q_delta", help = "Initial spread of the parameters", type = float, default = 0.01)
 parser.add_argument("-b", "--batch_size", help = "Batch size", type = int, default = 2048)
 
 # Hyperparameters
@@ -38,6 +37,10 @@ parser.add_argument("-lr", "--lr", help = "Learning rate", type = float, default
 parser.add_argument("-wd", "--weight_decay", help = "Weight decay", type = float, default = 0.0)
 parser.add_argument("-slr", "--step_lr", help = "Step size for the learning rate scheduler", type = int, default = 20)
 parser.add_argument("-g", "--gamma", help = "Gamma for the learning rate scheduler", type = float, default = 0.5)
+
+# Choose betweeb Alpha 1 - 2 - 3 counterparts
+parser.add_argument("-c", "--counterpart", help = "Choose between Alpha 1 - 2 - 3 counterparts", type = int, default = 3)
+parser.add_argument("-pca", "--pca", help = "Choose the reduced dimension for the word embeddings", type = int, default = 22)
 
 args = parser.parse_args()
 
@@ -47,7 +50,7 @@ def main(args):
     random.seed(args.seed)
     seed_list = random.sample(range(1, int(2**32 - 1)), int(args.runs))
     
-    model_name = "alpha_3"
+    model_name = "alpha_" + str(args.counterpart) + "_classical_counterpart"
 
     best_val_acc_all_runs = 0
     best_run = 0
@@ -65,8 +68,8 @@ def main(args):
         print("-----------------------------------")
         print("\n")
 
-        trainer = Alpha_3_trainer(args.iterations, args.train, args.val, args.test, seed_list[i], args.n_qubits, args.q_delta,
-                                          args.batch_size, args.lr, args.weight_decay, args.step_lr, args.gamma)
+        trainer = Alpha_classical_counterparts_trainer(args.iterations, args.train, args.val, args.test, seed_list[i],
+                                          args.batch_size, args.lr, args.weight_decay, args.step_lr, args.gamma, args.pca, model_number = args.counterpart)
         
         training_loss_list, training_acc_list, validation_loss_list, validation_acc_list, best_val_acc, best_model = trainer.train()
 
@@ -74,16 +77,8 @@ def main(args):
         print("Time taken for this run = ", t_after - t_before, "\n")
         time_taken = t_after - t_before
 
-        prediction_list, ground_truth_list = trainer.predict()
+        prediction_list, inference_time = trainer.predict()
         prediction_list = prediction_list.tolist()
-        ground_truth_list = ground_truth_list.tolist()
-
-
-        test_precision, test_recall, test_f1, _ = precision_recall_fscore_support(ground_truth_list, prediction_list)
-        # Since ndarrays are not json serializable, we need to convert them to lists
-        test_precision = test_precision.tolist() 
-        test_recall = test_recall.tolist()
-        test_f1 = test_f1.tolist()
 
         test_loss, test_acc = trainer.compute_test_logs(best_model)
 
@@ -92,43 +87,14 @@ def main(args):
             best_run = i
 
         # Save the results of each run in a json file
-        json_outputer.save_json_output_run_by_run(args, prediction_list, time_taken,
+        json_outputer.save_json_output_run_by_run(args, prediction_list, time_taken, inference_time = inference_time,
                     best_val_acc=best_val_acc_all_runs, best_run = best_run, seed_list=seed_list[i],
-                    test_acc=test_acc, test_loss=test_loss, test_precision = test_precision, test_recall = test_recall, test_f1 = test_f1,
+                    test_acc=test_acc, test_loss=test_loss,
                     val_acc=validation_acc_list, val_loss=validation_loss_list,
                     train_acc=training_acc_list, train_loss=training_loss_list
                     )
-        
-
-        model_path = os.path.join(args.output, f'{model_name}_{timestr}_run_{i}.pt')
-        torch.save(best_model, model_path)
-
-        # all_time_list.append(time_taken)
-        # all_training_loss_list.append(training_loss_list)
-        # all_training_acc_list.append(training_acc_list)
-        # all_validation_loss_list.append(validation_loss_list)
-        # all_validation_acc_list.append(validation_acc_list)
-
-        # prediction_list = trainer.predict()
-        # all_prediction_list.append(prediction_list.tolist())
-
-        # all_best_model_state_dict.append(best_model)
 
 
-        
-
-    
-    
-
-
-    # # Save the results of all runs in a json file
-    # timestr = time.strftime("%Y%m%d-%H%M%S")
-    # json_outputer = JsonOutputer(model_name, timestr, args.output)
-    # json_outputer.save_json_output(args, all_prediction_list, all_time_list, best_val_acc = best_val_acc_all_runs, 
-    #                 best_run = best_run, seed_list = seed_list, val_acc = all_validation_acc_list, val_loss = all_validation_loss_list,
-    #                 train_acc = all_training_acc_list, train_loss = all_training_loss_list, weights = all_best_model_state_dict
-    #                 )
-   
 
 
 

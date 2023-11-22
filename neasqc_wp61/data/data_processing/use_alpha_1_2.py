@@ -11,7 +11,7 @@ import random, os
 import numpy as np
 import torch
 import time
-import git
+from sklearn.metrics import precision_recall_fscore_support
 
 from lambeq import IQPAnsatz, Sim14Ansatz, Sim15Ansatz, StronglyEntanglingAnsatz
 from alpha_1_2_trainer import Alpha_1_2_trainer
@@ -76,16 +76,6 @@ def main(args):
 
     model_name = args.version
 
-    
-    all_training_loss_list = []
-    all_training_acc_list = []
-    all_validation_loss_list = []
-    all_validation_acc_list = []
-
-    all_prediction_list = []
-    all_time_list = []
-
-    all_best_model_state_dict = []
 
     best_val_acc_all_runs = 0
     best_run = 0
@@ -113,7 +103,16 @@ def main(args):
         print("Time taken for this run = ", t_after - t_before, "\n")
         time_taken = t_after - t_before
 
-        prediction_list = trainer.predict().tolist()
+        prediction_list, ground_truth_list = trainer.predict()
+        prediction_list = prediction_list.tolist()
+        ground_truth_list = ground_truth_list.tolist()
+
+
+        test_precision, test_recall, test_f1, _ = precision_recall_fscore_support(ground_truth_list, prediction_list)
+        # Since ndarrays are not json serializable, we need to convert them to lists
+        test_precision = test_precision.tolist() 
+        test_recall = test_recall.tolist()
+        test_f1 = test_f1.tolist()
 
         test_loss, test_acc = trainer.compute_test_logs(best_model)
 
@@ -125,7 +124,7 @@ def main(args):
         # Save the results of each run in a json file
         json_outputer.save_json_output_run_by_run(args, prediction_list, time_taken,
                     best_val_acc=best_val_acc_all_runs, best_run = best_run, seed_list=seed_list[i],
-                    test_acc=test_acc, test_loss=test_loss,
+                    test_acc=test_acc, test_loss=test_loss, test_precision = test_precision, test_recall = test_recall, test_f1 = test_f1,
                     val_acc=validation_acc_list, val_loss=validation_loss_list,
                     train_acc=training_acc_list, train_loss=training_loss_list
                     )

@@ -218,6 +218,7 @@ class Alpha_1_2_trainer():
 
     def predict(self):
         prediction_list = torch.tensor([])
+        ground_truth_list = np.array([])
         
         self.model.eval()
 
@@ -235,8 +236,9 @@ class Alpha_1_2_trainer():
                     predicted = self.model(circuits, embeddings_tensor)
 
                 prediction_list = torch.cat((prediction_list, torch.round(torch.flatten(predicted))))
+                ground_truth_list = np.concatenate((ground_truth_list, labels), axis=0)
 
-        return prediction_list.detach().cpu().numpy()
+        return prediction_list.detach().cpu().numpy(), ground_truth_list
 
 
 

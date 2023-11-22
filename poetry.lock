@@ -128,6 +128,23 @@ files = [
 ]
 
 [[package]]
+name = "bayesian-optimization"
+version = "1.4.3"
+description = "Bayesian Optimization package"
+optional = false
+python-versions = ">= 3.7"
+files = [
+    {file = "bayesian-optimization-1.4.3.tar.gz", hash = "sha256:f9a448e1b52d961301cbc953ce4199709f6c26b1c88994c9b4dadb7752a64550"},
+    {file = "bayesian_optimization-1.4.3-py3-none-any.whl", hash = "sha256:2719272d5825f1ba7d7609f3b1c1fdca13eba1b7ad52a5ca2e62f34154ecae28"},
+]
+
+[package.dependencies]
+colorama = ">=0.4.6"
+numpy = ">=1.9.0"
+scikit-learn = ">=0.18.0"
+scipy = ">=1.0.0"
+
+[[package]]
 name = "bitstring"
 version = "4.0.2"
 description = "Simple construction, analysis and modification of binary data."
@@ -1332,13 +1349,13 @@ files = [
 
 [[package]]
 name = "lambeq"
-version = "0.3.2"
+version = "0.3.3"
 description = "A QNLP toolkit"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "lambeq-0.3.2-py3-none-any.whl", hash = "sha256:2e4624c4e289bf8773d19894f73aebb86ae2c19bd8e59288d5121d8f674b81ae"},
-    {file = "lambeq-0.3.2.tar.gz", hash = "sha256:3cdfac289e069c5e606d44f0a4847bdc0d27829482cbacf664e9075fbb750755"},
+    {file = "lambeq-0.3.3-py3-none-any.whl", hash = "sha256:9ebc3f70a140d775d56225c0eb2db70ce3e13a0842a0c5e4306400524edfa249"},
+    {file = "lambeq-0.3.3.tar.gz", hash = "sha256:065e552f4969dec04d7b09aa87841a54a3a1be2ac0ed51ad3d6eab6dfb69049d"},
 ]
 
 [package.dependencies]
@@ -4840,4 +4857,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "8e39c0885260d5ae6fd4bcb54c57e99e9983171bc898c7a59290488895a8fc5a"
+content-hash = "c82bab3ca639b59ea02116fdc84bf71ca5a3b2fa614cd4de00e81d2ffec13845"
